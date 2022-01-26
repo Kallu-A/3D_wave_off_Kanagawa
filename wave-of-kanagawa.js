@@ -3,15 +3,7 @@
 var camera, scene, renderer;
 var windowScale;
 var cameraControls, effectController;
-var clock = new THREE.Clock();
-
-// GUI var
-var gridX = false;
-var gridY = false;
-var gridZ = false;
-var axes = false;
-var ground = false;
-
+const clock = new THREE.Clock();
 const near = 20;
 const far = 200;
 
@@ -57,36 +49,25 @@ function init() {
 function draw() {
 
 
-    var cube = new THREE.Mesh(
+    var ground = new THREE.Mesh(
         new THREE.BoxGeometry(50, 1, 50), seaMaterial);
-    cube.position.x = 0;
-    cube.position.y = 0;
-    cube.position.z = 0;
-    scene.add(cube);
+    ground.position.x = 0;
+    ground.position.y = 0;
+    ground.position.z = 0;
+    scene.add(ground);
     /*for (var i = 0; i < 100; i + ) {
         var wave = new THREE.Mesh(
             new THREE.
         )
     }*/
 
-    var curve = new THREE.CubicBezierCurve3(
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(-5, 15, 2),
-        new THREE.Vector3(20, 15, 1),
-        new THREE.Vector3(10, 0, 0)
-    );
-
-    var points = curve.getPoints(40);
-    var geometry = new THREE.BufferGeometry().setFromPoints(points);
-    var curveObject = new THREE.Line(geometry, seaMaterial);
-    scene.add(curveObject);
-
 
 }
 
-// allow the connection with the dat.gui.js
+// permet le lien entre le gui
 function renderGUI() {}
 
+// initialise le gui
 function setupGui() {
     var gui = new dat.GUI();
 }
