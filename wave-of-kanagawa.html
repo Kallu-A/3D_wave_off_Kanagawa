@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>The Great Wave off Kanagawa</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #DFC7A5;
+            text-align: center;
+            font-size: 28px;
+            color: black;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+        
+        a {
+            color: #297373;
+        }
+        
+        h1 {
+            font-size: 40px;
+        }
+        
+        #webGL {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            width: fit-content;
+            border-radius: 4px;
+        }
+        
+        img {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        }
+        
+        #container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        #container>div {
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- API importe du site de Three.js -->
+    <script src="http://threejs.org/build/three.min.js">
+    </script>
+    <script src="http://threejs.org/examples/js/loaders/OBJLoader.js">
+    </script>
+    <script src="http://threejs.org/examples/js/controls/OrbitControls.js">
+    </script>
+    <script src="https://threejs.org/examples/jsm/libs/stats.module.js">
+    </script>
+
+    <!-- Bibliotheques en local -->
+    <script src="lib/dat.gui.min.js"></script>
+
+
+    <a href="https://fr.wikipedia.org/wiki/La_Grande_Vague_de_Kanagawa">
+        <h1>La Grande Vague de Kanagawa</h1>
+    </a>
+    <a href="https://fr.wikipedia.org/wiki/Hokusai">Katsushika Hokusai - 1831</a>
+
+    <div id="container">
+        <div>
+            <h3>Modèle</h3>
+            <div id="webGL"></div>
+        </div>
+
+        <div>
+            <h3>Originale</h3>
+
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Tsunami_by_hokusai_19th_century.jpg" width="846" height="494" alt="Oeuvre d'art nommée The Great Wave off Kanagawa"></img>
+        </div>
+    </div>
+    <hr style="width: 70%; margin: 20px auto;">
+    <h3>Explications Techniques</h3>
+    <p>
+        Utilisation de Three.js pour faire un modèle 3D d'une oeuvre d'art.
+    </p>
+    <script src="wave-of-kanagawa.js"></script>
+    <script>
+        addToDOM();
+    </script>
+</body>
+
+</html>
