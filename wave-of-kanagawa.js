@@ -103,6 +103,9 @@ function fillScene() {
 
     if (axes) {
         Coordinates.drawAllAxes({ axisLength: 20, axisRadius: 0.3, axisTess: 10 });
+        document.getElementById('axes_legend').style.visibility = "visible";
+    } else {
+        document.getElementById('axes_legend').style.visibility = "hidden";
     }
 
     draw();
