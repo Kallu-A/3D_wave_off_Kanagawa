@@ -1,8 +1,8 @@
 "use strict";
 
-var camera, scene, renderer;
-var windowScale;
-var cameraControls, effectController;
+let camera, scene, renderer;
+let windowScale;
+let cameraControls, effectController;
 const clock = new THREE.Clock();
 const near = 20;
 const far = 200;
@@ -19,9 +19,9 @@ const boatMaterial = new THREE.MeshLambertMaterial({
 
 
 function init() {
-    var canvasWidth = 846;
-    var canvasHeight = 494;
-    var canvasRatio = canvasWidth / canvasHeight;
+    const canvasWidth = 846;
+    const canvasHeight = 494;
+    const canvasRatio = canvasWidth / canvasHeight;
     // SCENE
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(colorBG, far, far);
