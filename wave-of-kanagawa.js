@@ -36,14 +36,15 @@ function draw() {
     ground.position.z = decalz + size / 2;
     scene.add(ground);
 
+
     let boat = new THREE.Mesh(
         new THREE.CylinderGeometry(1, 1, 15, 20, 6), boatMaterial
     );
     boat.rotation.x = 90 * toRadian;
     boat.rotation.z = 45 * toRadian;
-    boat.position.x = decalx + 10;
+    boat.position.x = decalx + 30;
     boat.position.y = 0;
-    boat.position.z = decalz + 10;
+    boat.position.z = decalz + 30;
 
     scene.add(boat);
 
@@ -84,11 +85,11 @@ function init() {
 
     // CAMERA
     camera = new THREE.PerspectiveCamera(45, canvasRatio, near, far);
-    camera.position.set(decalx + size / 2, 25, -60 + decalz);
+    camera.position.set(decalx + size / 2, 30, -size + decalz);
 
     // CONTROLS
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
-    cameraControls.target.set(decalx + size / 2,0 , decalz);
+    cameraControls.target.set(decalx + size / 2,15 , decalz);
 
     fillScene();
 }
