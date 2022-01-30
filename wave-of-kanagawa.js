@@ -6,12 +6,12 @@ const clock = new THREE.Clock();
 const near = 20;
 const far = 400;
 
-const decalx = 30;
-const decaly = 0;
-const decalz = 30;
+const decalx = 5;
+const decalz = 5;
+const size = 50;
 const toRadian = Math.PI/180;
 // Color
-const colorBG = 0xFAF9E5;
+const colorBG = 0xF6F5E1;
 const seaMaterial = new THREE.MeshLambertMaterial({
     color: 0x1C4E76
 });
@@ -30,10 +30,10 @@ function draw() {
     //x is red
 
     let ground = new THREE.Mesh(
-        new THREE.BoxGeometry(50, 2, 50), seaMaterial);
-    ground.position.x = decalx;
-    ground.position.y = decaly - 2;
-    ground.position.z = decalz;
+        new THREE.BoxGeometry(size, 2, size), seaMaterial);
+    ground.position.x = decalx + size / 2;
+    ground.position.y = -2;
+    ground.position.z = decalz + size / 2;
     scene.add(ground);
 
     let boat = new THREE.Mesh(
@@ -42,7 +42,7 @@ function draw() {
     boat.rotation.x = 90 * toRadian;
     boat.rotation.z = 45 * toRadian;
     boat.position.x = decalx + 10;
-    boat.position.y = decaly;
+    boat.position.y = 0;
     boat.position.z = decalz + 10;
 
     scene.add(boat);
@@ -84,11 +84,11 @@ function init() {
 
     // CAMERA
     camera = new THREE.PerspectiveCamera(45, canvasRatio, near, far);
-    camera.position.set(decalx, 45 + decaly, -80 + decalz);
+    camera.position.set(decalx + size / 2, 25, -60 + decalz);
 
     // CONTROLS
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
-    cameraControls.target.set(decalx, decaly, decalz);
+    cameraControls.target.set(decalx + size / 2,0 , decalz);
 
     fillScene();
 }
