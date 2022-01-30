@@ -13,6 +13,10 @@ const seaMaterial = new THREE.MeshLambertMaterial({
     color: 0x1C4E76
 });
 
+const boatMaterial = new THREE.MeshLambertMaterial({
+    color: 0xE4BD92
+});
+
 
 function init() {
     var canvasWidth = 846;
@@ -50,17 +54,18 @@ function draw() {
 
 
     var ground = new THREE.Mesh(
-        new THREE.BoxGeometry(50, 1, 50), seaMaterial);
+        new THREE.BoxGeometry(50, 2, 50), seaMaterial);
     ground.position.x = 0;
     ground.position.y = 0;
     ground.position.z = 0;
     scene.add(ground);
-    /*for (var i = 0; i < 100; i + ) {
-        var wave = new THREE.Mesh(
-            new THREE.
-        )
-    }*/
 
+    var boat = new THREE.Mesh(
+        new THREE.BoxGeometry(20, 5, 20), boatMaterial);
+    ground.position.x = 0;
+    ground.position.y = 0;
+    ground.position.z = 0;
+    scene.add( boat );
 
 }
 
