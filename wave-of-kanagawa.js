@@ -1,14 +1,17 @@
 "use strict";
 
 let camera, scene, renderer;
-let windowScale;
 let cameraControls, effectController;
 const clock = new THREE.Clock();
 const near = 20;
-const far = 200;
+const far = 400;
 
+const decalx = 30;
+const decaly = 0;
+const decalz = 30;
+const toRadian = Math.PI/180;
 // Color
-const colorBG = 0xdfc7a5;
+const colorBG = 0xFAF9E5;
 const seaMaterial = new THREE.MeshLambertMaterial({
     color: 0x1C4E76
 });
@@ -17,11 +20,80 @@ const boatMaterial = new THREE.MeshLambertMaterial({
     color: 0xE4BD92
 });
 
+//gui var
+let axes = true;
+
+// ici se font les dessins
+function draw() {
+    //z is blue
+    //y is green
+    //x is red
+
+    let ground = new THREE.Mesh(
+        new THREE.BoxGeometry(50, 2, 50), seaMaterial);
+    ground.position.x = decalx;
+    ground.position.y = decaly - 2;
+    ground.position.z = decalz;
+    scene.add(ground);
+
+    let boat = new THREE.Mesh(
+        new THREE.CylinderGeometry(1, 1, 15, 20, 6), boatMaterial
+    );
+    boat.rotation.x = 90 * toRadian;
+    boat.rotation.z = 45 * toRadian;
+    boat.position.x = decalx + 10;
+    boat.position.y = decaly;
+    boat.position.z = decalz + 10;
+
+    scene.add(boat);
+
+}
+
+// permet le lien entre le gui
+function renderGUI() {
+    if (effectController.newAxes !== axes) {
+        axes = effectController.newAxes;
+
+        fillScene();
+    }
+}
+
+// initialise le gui
+function setupGui() {
+
+    effectController = {
+        newAxes: axes
+    }
+
+    let gui = new dat.GUI();
+    gui.add(effectController, "newAxes").name("Show axes");
+}
+
 
 function init() {
     const canvasWidth = 846;
     const canvasHeight = 494;
     const canvasRatio = canvasWidth / canvasHeight;
+
+    // RENDERER
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.gammaInput = true;
+    //renderer.gammaOutput = true;
+    renderer.setSize(canvasWidth, canvasHeight);
+    renderer.setClearColor(colorBG, 1);
+
+    // CAMERA
+    camera = new THREE.PerspectiveCamera(45, canvasRatio, near, far);
+    camera.position.set(decalx, 45 + decaly, -80 + decalz);
+
+    // CONTROLS
+    cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
+    cameraControls.target.set(decalx, decaly, decalz);
+
+    fillScene();
+}
+
+function fillScene() {
     // SCENE
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(colorBG, far, far);
@@ -29,53 +101,13 @@ function init() {
     // LIGHTS
     scene.add(new THREE.AmbientLight(0XFFFFFF));
 
-    // RENDERER
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.gammaInput = true;
-    //renderer.gammaOutput = true;
-    renderer.setSize(canvasWidth, canvasHeight);
-    renderer.setClearColor(scene.fog.color, 1);
-
-    // CAMERA
-    camera = new THREE.PerspectiveCamera(45, canvasRatio, near, far);
-    camera.position.set(0, 30, -100);
-
-    // CONTROLS
-    cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
-    cameraControls.target.set(0, 0, 0);
-
-    setupGui();
+    if (axes) {
+        Coordinates.drawAllAxes({ axisLength: 20, axisRadius: 0.3, axisTess: 10 });
+    }
 
     draw();
 }
 
-// ici se font les dessins
-function draw() {
-
-
-    var ground = new THREE.Mesh(
-        new THREE.BoxGeometry(50, 2, 50), seaMaterial);
-    ground.position.x = 0;
-    ground.position.y = 0;
-    ground.position.z = 0;
-    scene.add(ground);
-
-    var boat = new THREE.Mesh(
-        new THREE.BoxGeometry(20, 5, 20), boatMaterial);
-    ground.position.x = 0;
-    ground.position.y = 0;
-    ground.position.z = 0;
-    scene.add( boat );
-
-}
-
-// permet le lien entre le gui
-function renderGUI() {}
-
-// initialise le gui
-function setupGui() {
-    var gui = new dat.GUI();
-}
 
 // permet de lancer l'animation 
 function animate() {
@@ -85,7 +117,7 @@ function animate() {
 
 // permet d'afficher la nouvelle scene a chaque nouvel animation demandé
 function render() {
-    var delta = clock.getDelta();
+    let delta = clock.getDelta();
     cameraControls.update(delta);
 
     renderGUI();
@@ -94,14 +126,14 @@ function render() {
 
 // utile pour faire le lien entre l'html et le js
 function addToDOM() {
-    var container = document.getElementById("webGL");
+    let container = document.getElementById("webGL");
     container.appendChild(renderer.domElement);
 }
 
 try {
     init();
+    setupGui();
     animate();
 } catch (e) {
-    var errorReport = "Your program encountered an unrecoverable error, can not draw on canvas. Error was:<br/><br/>";
-    $('#webGL').append(errorReport + e);
+    document.getElementById('webGL').textContent = e;
 }
