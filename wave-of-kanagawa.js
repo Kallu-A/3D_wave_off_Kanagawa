@@ -11,6 +11,8 @@ const decalz = 5;
 const size = 50;
 const toRadian = Math.PI/180;
 
+var rotation = 0;
+
 // Color
 const colorBG = 0xD1D1D1;
 
@@ -32,6 +34,10 @@ const snowMaterial = new THREE.MeshBasicMaterial({
 
 //gui var
 let axes = true;
+
+// contient les object qui vont faire une rotation
+let movables = [];
+let oldRotate = [];
 
 // ici se font les dessins
 function draw() {
@@ -115,6 +121,8 @@ function create_boat(x, y, z, rx, ry, rz) {
                     obj.material = boatMaterial;
                 }
             } );
+            oldRotate.push(object.rotation.y);
+            movables.push(object);
             scene.add(object);
         });
 
@@ -122,9 +130,8 @@ function create_boat(x, y, z, rx, ry, rz) {
 
 // permet le lien entre le gui
 function renderGUI() {
-    if (effectController.newAxes !== axes) {
+    if (effectController.newAxes !== axes ) {
         axes = effectController.newAxes;
-
         fillScene();
     }
 }
@@ -133,11 +140,13 @@ function renderGUI() {
 function setupGui() {
 
     effectController = {
-        newAxes: axes
+        newAxes: axes,
+        rot: 0.0,
     }
 
     let gui = new dat.GUI();
     gui.add(effectController, "newAxes").name("Show axes");
+    gui.add(effectController, "rot", -5.0, 5.0,).name("Rotation");
 }
 
 
@@ -181,7 +190,6 @@ function fillScene() {
     } else {
         document.getElementById('axes_legend').style.visibility = "hidden";
     }
-
     draw();
 }
 
@@ -197,6 +205,9 @@ function render() {
     let delta = clock.getDelta();
     cameraControls.update(delta);
 
+    for (let i = 0; i < movables.length; i++) {
+        movables[i].rotation.y =  effectController.rot + oldRotate[i];
+    }
     renderGUI();
     renderer.render(scene, camera);
 }
