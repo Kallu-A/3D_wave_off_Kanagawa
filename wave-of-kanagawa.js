@@ -12,17 +12,22 @@ const size = 50;
 const toRadian = Math.PI/180;
 
 // Color
-const colorBG = 0xF6F5E1;
+const colorBG = 0xD1D1D1;
+
 const seaMaterial = new THREE.MeshLambertMaterial({
     color: 0x1C4E76
 });
 
 const boatMaterial = new THREE.MeshLambertMaterial({
-    color: 0xE4BD92, shading: THREE.FlatShading
+    color: 0xE4BD92
 });
 
 const mountainMaterial = new THREE.MeshLambertMaterial({
     color: 0x163C59
+});
+
+const snowMaterial = new THREE.MeshBasicMaterial({
+    color: 0xF1F1F1, //specular: 0XFFFFFF, shininess: 4
 });
 
 //gui var
@@ -72,12 +77,20 @@ function drawGround() {
 
 // dessine la montagne
 function drawMountain() {
+
     let mountain = new THREE.Mesh(
-        new THREE.CylinderGeometry(1, 20, 13, 10, 6), mountainMaterial
-    );
-    mountain.translateZ(decalz + size * 1.3);
+        new THREE.CylinderGeometry(1, 20, 13, 10, 6), mountainMaterial);
+    mountain.translateZ(decalz + size * 1.35);
     mountain.translateX( size / 2);
+    mountain.translateY(3);
     scene.add(mountain);
+
+    let snow = new THREE.Mesh(
+        new THREE.CylinderGeometry(1, 10, 6, 10, 6), snowMaterial);
+    snow.translateZ(decalz + size * 1.35);
+    snow.translateX( size / 2);
+    snow.translateY( 7);
+    scene.add(snow);
 
 
 }
@@ -157,9 +170,9 @@ function fillScene() {
     scene.fog = new THREE.Fog(colorBG, far, far);
 
     // LIGHTS
-    scene.add(new THREE.AmbientLight(0XFFFFFF));
-    var light = new THREE.DirectionalLight( 0x232324, 0.7 );
-    light.position.set( -800, 900, 300 );
+    scene.add(new THREE.AmbientLight(0X838384));
+    var light = new THREE.DirectionalLight( 0xE4BD92, 0.5 );
+    light.position.set( decalx, 30, decalz );
     scene.add(light);
 
     if (axes) {

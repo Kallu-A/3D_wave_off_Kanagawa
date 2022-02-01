@@ -90,9 +90,13 @@
     </div>
     <hr style="width: 70%; margin: 20px auto;">
     <h3>Explications Techniques</h3>
-    <p>
+    <p style="font-size: 22px; text-align: left; padding-left: 60px">
         Utilisation de Three.js pour faire un modèle 3D d'une oeuvre d'art.<br>
-        Possiblité de faire apparaitre les axes avec le panel en haut a droite (la légende apparaîtra aussi).
+        Possiblité de faire apparaitre les axes avec le panel en haut a droite <i>(la légende apparaîtra aussi)</i>. <br>
+        L'oeuvre est éclairé par une lumière directionnelle sombre venant de l'axe Z elle permet entre autres de créer le relief des bateaux.<br>
+        La montagne est faite avec deux THREE.CylinderGeometry.
+        Une la montagne et l'autre la neige, la neige est en material basic pour pas ne pas avoir la noirceur de la lumière et bien ressortir.<br>
+        Les bateaux sont un OBJ avec un material lambert  ils sont placés très simplement à l'aide d'une fonction create_boat(x, y, z, rx, ry, rz) qui permet l'ajout rapide et simple.
     </p>
     <script src="wave-of-kanagawa.js"></script>
     <script>
