@@ -10,6 +10,7 @@ const decalx = 5;
 const decalz = 5;
 const size = 50;
 const toRadian = Math.PI/180;
+
 // Color
 const colorBG = 0xF6F5E1;
 const seaMaterial = new THREE.MeshLambertMaterial({
@@ -17,7 +18,11 @@ const seaMaterial = new THREE.MeshLambertMaterial({
 });
 
 const boatMaterial = new THREE.MeshLambertMaterial({
-    color: 0xE4BD92
+    color: 0xE4BD92, shading: THREE.FlatShading
+});
+
+const mountainMaterial = new THREE.MeshLambertMaterial({
+    color: 0x163C59
 });
 
 //gui var
@@ -28,15 +33,19 @@ function draw() {
     //z is blue
     //y is green
     //x is red
+    drawGround();
+    drawMountain();
 
-    let ground = new THREE.Mesh(
-        new THREE.BoxGeometry(size, 2, size), seaMaterial);
-    ground.position.x = decalx + size / 2;
-    ground.position.y = -2;
-    ground.position.z = decalz + size / 2;
-    scene.add(ground);
+    // bas droite
+    create_boat(size/3, 0, size/3, 0, 85 * toRadian, 0);
 
+    //haut droite
+    create_boat(size/3, 0, size/1.2, 0, 95 * toRadian, 0);
 
+    //gauche
+    create_boat(size/ 1.2, 0, size/2, 0, 70 * toRadian, 0);
+
+    /*
     let boat = new THREE.Mesh(
         new THREE.CylinderGeometry(1, 1, 15, 20, 6), boatMaterial
     );
@@ -47,6 +56,54 @@ function draw() {
     boat.position.z = decalz + 30;
 
     scene.add(boat);
+     */
+
+}
+
+// dessine le sol
+function drawGround() {
+    let ground = new THREE.Mesh(
+        new THREE.BoxGeometry(size, 2, size), seaMaterial);
+    ground.position.x = decalx + size / 2;
+    ground.position.y = -2;
+    ground.position.z = decalz + size / 2;
+    scene.add(ground);
+}
+
+// dessine la montagne
+function drawMountain() {
+    let mountain = new THREE.Mesh(
+        new THREE.CylinderGeometry(1, 20, 13, 10, 6), mountainMaterial
+    );
+    mountain.translateZ(decalz + size * 1.3);
+    mountain.translateX( size / 2);
+    scene.add(mountain);
+
+
+}
+
+// charge les différents fichiers
+function create_boat(x, y, z, rx, ry, rz) {
+    var loader = new THREE.OBJLoader();
+    // Charger le fichier
+
+    loader.load('boat.obj ',
+        function(object) {
+            object.scale.set(1.7,1.7,1.7);
+            object.position.x = x;
+            object.position.y = y - 1;
+            object.position.z = z;
+            object.rotation.x = rx;
+            object.rotation.y = ry;
+            object.rotation.z = rz;
+
+            object.traverse( function (obj) {
+                if (obj.isMesh){
+                    obj.material = boatMaterial;
+                }
+            } );
+            scene.add(object);
+        });
 
 }
 
@@ -101,9 +158,12 @@ function fillScene() {
 
     // LIGHTS
     scene.add(new THREE.AmbientLight(0XFFFFFF));
+    var light = new THREE.DirectionalLight( 0x232324, 0.7 );
+    light.position.set( -800, 900, 300 );
+    scene.add(light);
 
     if (axes) {
-        Coordinates.drawAllAxes({ axisLength: 20, axisRadius: 0.3, axisTess: 10 });
+        Coordinates.drawAllAxes({ axisLength: 20, axisRadius: 0.3, axisTess: 7 });
         document.getElementById('axes_legend').style.visibility = "visible";
     } else {
         document.getElementById('axes_legend').style.visibility = "hidden";
