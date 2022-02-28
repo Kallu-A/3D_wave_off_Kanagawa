@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>The Great Wave off Kanagawa</title>
+
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <!-- API importe du site de Three.js -->
+    <script src="https://threejs.org/build/three.min.js">
+    </script>
+    <script src="https://threejs.org/examples/js/loaders/OBJLoader.js">
+    </script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+    </script>
+    <script src="https://threejs.org/examples/jsm/libs/stats.module.js">
+    </script>
+
+    <!-- Bibliotheques en local -->
+    <script src="lib/dat.gui.min.js"></script>
+    <script src="lib/Coordinates.js"></script>
+    <script src="lib/stats.min.js"></script>
+
+    <!-- Page Web -->
+    <div id="stats"></div>
+    <a href="https://fr.wikipedia.org/wiki/La_Grande_Vague_de_Kanagawa">
+        <h1>La Grande Vague de Kanagawa</h1>
+    </a>
+    <a href="https://fr.wikipedia.org/wiki/Hokusai">Katsushika Hokusai - 1831</a>
+    <div id="container">
+        <div>
+            <h3>Modèle</h3>
+            <div id="webGL">
+                <p id="axes_legend" style="position: absolute; margin-top: -6px; margin-left: 5px"><span id="x">x</span> <span id="y">y</span> <span id="z">z</span></p>
+            </div>
+        </div>
+
+        <div>
+            <h3>Originale</h3>
+
+            <img src="img.jpg" width="846" height="494" alt="Oeuvre d'art nommée The Great Wave off Kanagawa"/>
+        </div>
+    </div>
+    <hr style="width: 70%; margin: 20px auto;">
+    <h3>Explications Techniques</h3>
+    <p style="font-size: 22px; text-align: left; padding-left: 60px">
+        Utilisation de Three.js pour faire un modèle 3D d'une œuvre d'art.<br>
+        Pour des raisons de performances le maximum de variable ect... ont été précalculé ce qui permet d'avoir une scène très fluide.<br>
+        Possiblité de faire apparaitre les axes avec le panel en haut a droite <i>(la légende apparaîtra aussi)</i>. <br>
+        J'utilise un brouillard pour quand on dezoom fortement avoir la scène qui disparaît de manière plus naturel<br>
+        J'utilise dat.gui pour laisser la posibilité de modifier des parties de l'oeuvre et stat.min pour avoir les fps et montrer que le programme est bien optimisé.<br>
+        L'œuvre est éclairé par une lumière directionnelle sombre venant de l'axe Z elle permet entre autres de créer le relief des bateaux.<br>
+        La montagne est faite avec deux THREE.CylinderGeometry.
+        Une la montagne et l'autre la neige, la neige est en material basic pour pas ne pas avoir la noirceur de la lumière et bien ressortir.<br>
+        Les bateaux sont un OBJ avec un material lambert ils sont placés très simplement à l'aide d'une fonction create_boat(x, z, rx, ry, rz) qui permet l'ajout rapide et simple. <br> <br>
+        Pour la génération de la vague j'utilise un BufferGeometry avec une suite de points qui va dessiner les triangles.<br>
+        Je calcule la hauteur de ses points à l'aide d'un sin() et d'autres paramètres pour avoir l'effet de courbe montante descendante.<br>
+        Je dessine donc 2 triangles inversés pour faire une forme pleine sur le haut et de même sur les différents côtés en faisant attention à la visibilité<br>
+        (Et donc de l'ordre des points). <br>
+        Quant à la réalisation de la partie blanche de la vague la première étape consiste à retrouver le sommet pour ce faire quand je calcule le y de la vague je vérifie si on n'a x2 < x1 > x,
+        cela signifie qu'on est au haut de la vague et j'y appelle donc white_part_wave(x).<br>
+        Une fois la zone déterminée je recrée la même forme que la vague sur la partie haute de la vague (je peux déterminer la taille a l'aide de la fréquence).
+        Je positionne cette nouvelle formée légèrement plus haute pour qu'elle soit visible.<br>
+        Quelques modifications sont aussi effectuées un décalage des UV est effectués aux extrémités de la vague pour que la texture ne parte pas d'un coup mais progressivement pour un effet naturel<br>
+        <br>
+        Pour adapter les bateaux à la vague j'utilise la relation de <b>Chasles</b> pour déterminer la hauteur sur la vague qui est en pente.<br>
+        Je calcule deux points assez éloignés du bateau pour déterminer la pente a s'adapter<br>
+        Une fois les deux points calculés, on détermine leur y (hauteur) de la même manière que pour les vagues et on utilise Chasles pour les remettre par rapport à la pente.<br>
+        Ensuite avec les deux points de l'extrémité de là où devrait être le bateau on peut déterminer un 3ᵉme points en prenant le x de pt1 et l'y de pt2 ce qui donne un triangle rectangle<br>
+        Dans ce triangle on connaît l'adjacent et l'opposée on peut donc utiliser tangente(x) = opposée / adjacente. Ce qui nous donnera l'angle de rotation à appliquer.
+        Pour faire tourner l'OBJ je fais une rotation selon l'axe (1,0,0).<br>
+        Pour les prochaines animations je refais cette même rotation, mais en sens inverse pour préserver l'OBJ et ne pas à avoir à le refaire à chaque animation.
+        <br><br>
+        La skybox est faite à l'aide d'une image de ciel recoloriez par mes soins dans les couleurs de l'œuvre et découpé et redimensionné à l'aide de GIMP.<br>
+        Quant aux animations le fichier reset remet simplement aux valeurs par défaut.
+        L'option Wave règle simplement une variable qui sert de fréquence à la fonction sin pour les vagues.
+        Quant au Live mode celui-ci se charge simplement d'incrémenter un x dans notre sin ce qui va nous faire parcourir la courbe sin, la valeur speed est la valeur d'increment par tour du x.<br>
+        Pour le mode aventure je place seulement la caméra sur le bateau à l'aide des mêmes méthodes utilisées que pour placer le bateau et j'adapte le target du CameraControls pour que la caméra suit l'angle du bateau.<br>
+        Je change aussi la fov pendant le mode aventure pour avoir une meilleure immersion.<br>
+        <br>
+        Pour appliquer la texture, je calcule à l'initialisation les valeurs des UV correspondant à ma texture de ce fait, il n'y a quasiment aucune perte de temps au runtime,
+        et la texture épouse parfaitement la forme de la vague. Pour donner un aspect de vague je vais jouer sur l'offset de la texture je vais l'incrémenter en X de la valeur speed de la vague.<br>
+        Comme cela la texture va aussi vite que les vagues en mode run ce qui ajoute du réalisme.<br>
+        Quant à l'offset en Y je vais varier entre deux valeurs très proches de 0 pour faire un effet de mouvement latéral propre à la mer, pour que le changement de direction du offset ne soit pas
+        trop brusque je multiplie par sa valeur elle-même de ce fait quand elle se rapproche de 0 elle se déplace lentement et quand elle s'écarte, elle s'accélère ce qui évite un mouvement régulier peu réaliste.<br>
+        Pour ne pas avoir de choc dans l'offset je répète l'image en miroir comme ça je suis sûr que la transition du repeat se passe sans accroc.<br>
+
+    </p>
+    <script src="wave-of-kanagawa.js"></script>
+    <script>
+        addToDOM();
+    </script>
+</body>
+
+</html>
