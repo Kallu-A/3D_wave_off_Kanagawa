@@ -1,10 +1,12 @@
 "use strict";
 
-let camera, scene, renderer, gui, stats;
+let camera, scene, renderer, gui, stats, webGL, isParticuleSet;
 let cameraControls, effectController;
 const clock = new THREE.Clock();
 const near = 0.2;
 const far = 300;
+const canvasWidth = 846;
+const canvasHeight = 494;
 
 const decalx = 5;
 const decalz = 5;
@@ -16,6 +18,7 @@ let pointEnd = new Float32Array(3);
 let wave, wasAdventure;
 let topWave = [];
 wasAdventure = false;
+isParticuleSet = false;
 
 const positions = new Float32Array((6 + 6 + 6 + 6) * 3 * size);
 const uv = new Float32Array(( (6 + 6 + 6 + 6) * 3 * size ) * (2/3) ); // on précalcule les uv car ceux-ci ne changent pas
@@ -24,6 +27,8 @@ const uv = new Float32Array(( (6 + 6 + 6 + 6) * 3 * size ) * (2/3) ); // on pré
 var loader = new THREE.TextureLoader();
 let waveTexture = loader.load('res/wave_texture.png');
 let waveWhiteTexture = loader.load('res/white_part.png');
+let particleTexture = loader.load( 'res/particle.png' );
+
 let incrX = 0, incrY = 0.02, vY = 1;
 waveTexture.wrapS = waveTexture.wrapT = THREE.MirroredRepeatWrapping;
 waveWhiteTexture.wrapS = waveWhiteTexture.wrapT = THREE.RepeatWrapping;
@@ -51,6 +56,14 @@ const snowMaterial = new THREE.MeshBasicMaterial({
     color: 0xF1F1F1
 });
 
+const particleMaterial = new THREE.SpriteMaterial( { map: particleTexture, transparent: true, depthWrite: false } );
+
+let skyBoxLoader = new THREE.CubeTextureLoader()
+    .setPath('res/skybox/')
+    .load(['px.png', 'mx.png',
+        'py.png', 'my.png',
+        'pz.png', 'mz.png']);
+
 //gui var
 let axes = false;
 let resetCamera = {
@@ -66,6 +79,12 @@ let resetWave = {
         effectController.freq = 6.8
         liveValue = 0;
         resetWaveFunction();
+        generateParticles();
+        groupParticle.children.forEach(function(child) {
+            if (child.position.y <= 1 || child.position.x <= decalx) groupParticle.remove(child);
+            child.position.x -= 16;
+            child.position.y -= 3 / child.position.x;
+        });
     }
 }
 let resetLive = {
@@ -87,6 +106,8 @@ let live = false;
 let liveValue = 0;
 let incrementLiveValue = 0.2;
 
+// PARTICULES utiles pour tout retirer d'un coup
+let groupParticle = new THREE.Object3D();
 
 // ici se font les dessins
 function draw() {
@@ -104,8 +125,8 @@ function createWave() {
     ym2 = 0;
     for (let ix = 0; ix < size; ix++) {
         // decal les valeurs sur notre ground
-        y = calculateY(ix);
-        ya = calculateY(ix + 1);
+        y = calculateY(ix, true);
+        ya = calculateY(ix + 1, true);
 
         if ( ix !== 0 ) {
             if ( ym2 < ym1 &&  ym1 > y  && y > 2 && ym1 > 2 && ym2 > 2) white_part_wave(decalx + ix - 1);
@@ -273,8 +294,8 @@ function createWave() {
 
     // pour ne pas avoir la texture blanche qui pop d'un coup
     for (let ix = size; ix < size + 10; ix++ ) {
-        y = calculateY(ix);
-        ya = calculateY(ix + 1);
+        y = calculateY(ix, true);
+        ya = calculateY(ix + 1, true);
 
         if ( ix !== 0 ) {
             if ( ym2 < ym1 &&  ym1 > y  && y > 2 && ym1 > 2 && ym2 > 2) white_part_wave(decalx + ix - 1);
@@ -288,7 +309,7 @@ function createWave() {
     i = 2700;
     {
         // fait la partie en x = size de la face de la vague
-        y = calculateY(ix2);
+        y = calculateY(ix2, true);
         // triangle 1
         // point devant bas
         positions[i] = decalx + ix2;
@@ -341,7 +362,7 @@ function createWave() {
 
         // fait la partie en x = decalx de la face de la vague
         ix2 = 0;
-        y = calculateY(ix2);
+        y = calculateY(ix2, true);
         // triangle 1
         // point devant haut
         positions[i] = decalx;
@@ -394,6 +415,7 @@ function createWave() {
     let object = new THREE.Mesh(geometry, waveMaterial);
     wave = object;
     scene.add(object);
+    scene.add(groupParticle);
 }
 
 // créer la partie supérieur blanche de la vague
@@ -412,12 +434,12 @@ function white_part_wave(x) {
             decalUV -= inc;
             continue;
         }
-        if ( ix + decalx < decalx ) {
+        if ( ix + decalx <= decalx -1 ) {
             decalUV += inc;
             continue;
         }
-        y = calculateY(ix) + 0.3;
-        ya = calculateY(ix + 1) + 0.3;
+        y = calculateY(ix, true) + 0.3;
+        ya = calculateY(ix + 1, true) + 0.3;
 
         // vue du haut uv
         {
@@ -522,6 +544,39 @@ function white_part_wave(x) {
     scene.add(object);
     topWave.push(object);
 
+    if (x === size + decalx + 8 && !isParticuleSet) {
+        isParticuleSet = true;
+        scene.remove(groupParticle);
+        groupParticle = new THREE.Object3D();
+        generateParticles();
+    } else {
+        incrParticles();
+    }
+    if (x < decalx + 20)
+        isParticuleSet = false;
+}
+
+// génere des particules
+function generateParticles() {
+    let particles, sizeParticule;
+    for ( let count = 0; count < lastFreq * 20; count += 1 ) {
+        particles = new THREE.Sprite( particleMaterial);
+        sizeParticule = Math.random() * 0.6 + 0.1;
+        particles.scale.set(sizeParticule, sizeParticule, sizeParticule);
+        particles.position.x = (decalx + size) - ( Math.random() * 30);
+        particles.position.z = ( Math.random() * size) + decalz;
+        particles.position.y = Math.random() * lastFreq * (particles.position.x / 15) * ((particles.position.z + decalz) / size) + 1;
+        groupParticle.add(particles);
+    }
+}
+
+// s'occupe de déplacer les particules
+function incrParticles() {
+    groupParticle.children.forEach(function(child) {
+        if (child.position.y <= 1 || child.position.x <= decalx) groupParticle.remove(child);
+        child.position.x -= incrementLiveValue * 0.8;
+        child.position.y -= (2 / child.position.x) * (incrementLiveValue * 7 ) - incrementLiveValue / 9;
+    });
 }
 
 // dessine le sol
@@ -592,7 +647,7 @@ function create_boat(x, z, rx, ry, rz, i) {
 function updateBoatWave(movable, i) {
     // adapte a la hauteur de la vague
     // calcul en fonction de la position de la pente de la vague
-    let y = calculateY(movable.position.x - 6) * 1.1;
+    let y = calculateY(movable.position.x - 6, true) * 1.1;
     y = (chaslesY(y, movable.position.z) - 1) * 1.25;
     movable.position.y = y;
     if (movable.position.z < size / 1.5) movable.position.y += 0.3;
@@ -603,15 +658,15 @@ function updateBoatWave(movable, i) {
     pointEnd[0] = -pointFront[0] + 3;
     pointEnd[2] = pointFront[2];
 
-    // remise des valeurs par rapport a la position du bateau pour le calcul de la hauteur
+    // remise des valeurs par rapport à la position du bateau pour le calcul de la hauteur
     pointFront[0] += movable.position.x - 6;
     pointEnd[0] += movable.position.x - 6;
 
     // calcul des y
-    pointFront[1] = calculateY(pointFront[0]);
-    pointEnd[1] = calculateY(pointEnd[0]);
-    pointFront[1] = chaslesY(pointFront[1], pointFront[2]);
-    pointEnd[1] = chaslesY(pointEnd[1], pointEnd[2]);
+    pointFront[1] = calculateY(pointFront[0], false);
+    pointEnd[1] = calculateY(pointEnd[0], false);
+    pointFront[1] = chaslesY(pointFront[1], pointFront[2], false);
+    pointEnd[1] = chaslesY(pointEnd[1], pointEnd[2], false);
 
     let op = pointFront[1] - pointEnd[1];
     let adj = pointFront[0] - pointEnd[0];
@@ -644,6 +699,18 @@ function renderGUI() {
         fillScene();
     }
 
+    if (effectController.fullScreen) {
+        if (webGL.className === "") {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            webGL.className = "display-full";
+        }
+    } else {
+        if (webGL.className === "display-full") {
+            renderer.setSize(canvasWidth, canvasHeight);
+            webGL.className = "";
+        }
+    }
+
     if (lastFreq !== effectController.freq) {
         lastFreq = effectController.freq;
 
@@ -661,23 +728,36 @@ function renderGUI() {
     // gère le mode aventure
     if ( effectController.adventureMode === true ) {
         wasAdventure = true;
-
         // met la camera a la place du point de vue sur le bateau
-        camera.position.x = (size /3) + 3;
-        camera.position.z = size/1.2;
+        if (effectController.boatSelected === "0") {
+            camera.position.x = (size / 3) + 3;
+            camera.position.z = size / 1.2;
+        } else if (effectController.boatSelected === "1") {
+            camera.position.x = (size /3) + 3;
+            camera.position.z = size/3;
+        } else if (effectController.boatSelected === "2") {
+            camera.position.x = (size /1.2) + 3;
+            camera.position.z = size/2;
+        }
 
-        camera.position.y = calculateY(camera.position.x - 6) * 1.1;
-        camera.position.y = (chaslesY(camera.position.y, camera.position.z) - 1) * 1.25;
+        camera.position.y = calculateY(camera.position.x - 6, true) * 1.1;
+        camera.position.y = (chaslesY(camera.position.y, camera.position.z, false) - 1) * 1.25;
         if (camera.position.z < size / 1.5) camera.position.y += 0.3;
         camera.position.y += 2;
 
         // change la fov pour une meilleur immersion
         camera.setFocalLength(15);
 
+        let posZ;
+        if (camera.position.z > 30 ) {
+            posZ = camera.position.z - 8
+        } else {
+            posZ = camera.position.z + 8
+        }
         // défini une target a observer pour un meilleur rendu
         cameraControls.target.set( camera.position.x + 10,
             camera.position.y * 1.8,
-            camera.position.z - 8 );
+            posZ );
 
         cameraControls.enable = false;
         effectController.liveMode = true;
@@ -691,7 +771,6 @@ function renderGUI() {
         wasAdventure = false;
         effectController.liveMode = false;
         cameraControls.enable = true;
-
     }
 }
 
@@ -702,27 +781,31 @@ function setupGui() {
         freq: 6.8,
         liveMode: false,
         incrementLiveValue: incrementLiveValue,
-        adventureMode: false
+        adventureMode: false,
+        boatSelected: "0",
+        fullScreen: false
     }
 
     gui = new dat.GUI();
-    gui.add(effectController, "newAxes").name("Show axes");
-    gui.add(effectController, "freq", 3, 8).name("Wave").listen();
+    const settingFolder = gui.addFolder("Settings");
+    settingFolder.add(effectController, "newAxes").name("Show axes");
+    settingFolder.add(effectController, "fullScreen").name("Full Screen");
+    settingFolder.add(effectController, "freq", 3, 8).name("Wave").listen();
     const runFolder = gui.addFolder("Live Mode");
     runFolder.add(effectController, "liveMode").name("Run").listen();
     runFolder.add(effectController, "incrementLiveValue", 0.05, 1).name("Speed").listen();
     runFolder.add(effectController, "adventureMode").name("Human view").listen();
+    runFolder.add(effectController, "boatSelected", { 'Bateau 1': 0, 'Bateau 2': 1, 'Bateau 3': 2 }).name("Boat");
     const resetFolder = gui.addFolder("Reset");
     resetFolder.add(resetCamera, "reset").name("Reset Camera");
     resetFolder.add(resetWave, "reset").name("Reset Wave");
     resetFolder.add(resetLive, "reset").name("Reset Live Mode");
 
     runFolder.open();
+    settingFolder.open();
 }
 
 function init() {
-    const canvasWidth = 846;
-    const canvasHeight = 494;
     const canvasRatio = canvasWidth / canvasHeight;
 
     // RENDERER
@@ -757,11 +840,7 @@ function fillScene() {
     scene.add(light);
 
     // BACKGROUND (SKYBOX)
-    scene.background = new THREE.CubeTextureLoader()
-        .setPath('res/skybox/')
-        .load(['px.png', 'mx.png',
-            'py.png', 'my.png',
-            'pz.png', 'mz.png']);
+    scene.background = skyBoxLoader;
 
     // GUI
     if (axes) {
@@ -771,6 +850,11 @@ function fillScene() {
         document.getElementById('axes_legend').style.visibility = "hidden";
     }
     draw();
+    tweenStart.chain(tweenEnd);
+    tweenEnd.chain(tweenStart);
+    tweenStart.start();
+    waveWhiteTexture.offset.set(0, 5);
+
 }
 
 // permet de lancer l'animation 
@@ -786,35 +870,47 @@ function render() {
     renderGUI();
     cameraControls.update(delta);
 
-    // effet de vague
-    if (incrY < 0.005 ) vY = 1;
-    else if (incrY > 0.03 ) vY = -1;
     incrX += effectController.incrementLiveValue / 100;
-    incrY += ( (0.005 * incrY) * vY);
-    waveTexture.offset.set(incrX, incrY);
-    waveWhiteTexture.offset.set(0, incrY * 1.5 );
+    TWEEN.update();
+
     renderer.render(scene, camera);
 }
 
 // fait le lien entre l'html et le js
 function addToDOM() {
-    let container = document.getElementById("webGL");
-    container.appendChild(renderer.domElement);
+    webGL = document.getElementById("webGL");
+    webGL.appendChild(renderer.domElement);
     document.getElementById("stats").appendChild( stats.domElement );
 }
 
 // calcul le y de la vague par rapport au x
-function calculateY(x) {
+function calculateY(x, isLimit) {
     let xDecal = x + liveValue;
     let y  = ((x * 0.3) * Math.sin(((lastFreq * xDecal) / (size * 1.1)) * -1)) + lastFreq * 0.7;
-    if (y < 0) y = 0.2;
-    return y;
+    y += 3;
+    if (y < 0 ) {
+        if (isLimit) {
+            y = 0.2;
+        } else {
+            // contrainte force du mouvement lié à la résistance de l'eau
+            y /= 2;
+        }
+    }
+
+return y;
 }
 
 // applique la formule de Chasles
-function chaslesY(y, z) {
+function chaslesY(y, z, isLimit) {
     y = z * (y /  (decalx + size) );
-    if ( y < 0) y = 0.2;
+    if (y < 0 ) {
+        if (isLimit) {
+            y = 0.2;
+        } else {
+            // contrainte force du mouvement lié à la résistance de l'eau
+            y /= 2;
+        }
+    }
     return y;
 }
 
@@ -825,9 +921,6 @@ function precalculateUv_Pos() {
     let inc = 1 / size;
     for (let ix = 0; ix < size; ix++) {
         // decal les valeurs sur notre ground
-        y = calculateY(ix);
-        ya = calculateY(ix + 1);
-
         // vue du haut
         {
             // triangle 1
@@ -992,18 +1085,65 @@ function precalculateUv_Pos() {
         uv[i + 1] = 1;
         uv[i] = 0;
     }
-
-
-    // précalcule une partie des potions possible pour gagner du temps de runtime
-
-
 }
+
+// TWEEN
+var current = { x: 0 };
+
+let update  = function(){
+    incrY += 0.005 * effectController.incrementLiveValue;
+    waveTexture.offset.set(incrX, incrY);
+    waveWhiteTexture.offset.set(0, incrY);
+}
+
+let updateReverse  = function(){
+    incrY -= 0.005 * effectController.incrementLiveValue;
+    waveTexture.offset.set(incrX, incrY);
+    waveWhiteTexture.offset.set(0, incrY);
+}
+
+let tweenStart = new TWEEN.Tween(current)
+    .to({x: +100}, 3000)
+    .delay(1)
+    .easing(TWEEN.Easing.Bounce.In)
+    .onUpdate(update);
+
+let tweenEnd = new TWEEN.Tween(current)
+    .to({x: +0}, 3000)
+    .delay(1)
+    .easing(TWEEN.Easing.Bounce.Out)
+    .onUpdate(updateReverse);
+// FIN - TWEEN
 
 try {
     init();
     precalculateUv_Pos();
     setupGui();
-    animate();
+    // initialise les particules à la main lors du lancement
+    generateParticles();
+    groupParticle.children.forEach(function(child) {
+        if (child.position.y <= 1 || child.position.x <= decalx) groupParticle.remove(child);
+        child.position.x -= 16;
+        child.position.y -= 3 / child.position.x;
+    });
+
 } catch (e) {
     document.getElementById('webGL').textContent = "Error : " + e;
+    console.log(e);
 }
+
+// lance l'animation que quand la page est prête
+document.addEventListener("DOMContentLoaded", function() {
+    // ajoute listener resize window adapté le mode plein écran webGL
+    window.addEventListener("resize", function() {
+        if (effectController.fullScreen) {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    });
+    try {
+        animate();
+    } catch (e) {
+        document.getElementById('webGL').textContent = "Error : " + e;
+        console.log(e);
+    }
+});

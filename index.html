@@ -6,6 +6,7 @@
     <title>The Great Wave off Kanagawa</title>
 
     <link rel="stylesheet" href="index.css">
+    <link rel="icon" type="image/x-icon" href="img.jpg">
 </head>
 
 <body>
@@ -23,6 +24,7 @@
     <script src="lib/dat.gui.min.js"></script>
     <script src="lib/Coordinates.js"></script>
     <script src="lib/stats.min.js"></script>
+    <script src="lib/tween.min.js"></script>
 
     <!-- Page Web -->
     <div id="stats"></div>
@@ -44,14 +46,16 @@
             <img src="img.jpg" width="846" height="494" alt="Oeuvre d'art nommée The Great Wave off Kanagawa"/>
         </div>
     </div>
+    <!-- Explication technique -->
     <hr style="width: 70%; margin: 20px auto;">
     <h3>Explications Techniques</h3>
     <p style="font-size: 22px; text-align: left; padding-left: 60px">
         Utilisation de Three.js pour faire un modèle 3D d'une œuvre d'art.<br>
-        Pour des raisons de performances le maximum de variable ect... ont été précalculé ce qui permet d'avoir une scène très fluide.<br>
+        Pour des raisons de performances le maximum de variables ect... ont été précalculé ce qui permet d'avoir une scène très fluide.<br>
+        De plus les textures ont des côtés ^2 pour permettre un chargement plus rapide<br>
         Possiblité de faire apparaitre les axes avec le panel en haut a droite <i>(la légende apparaîtra aussi)</i>. <br>
-        J'utilise un brouillard pour quand on dezoom fortement avoir la scène qui disparaît de manière plus naturel<br>
-        J'utilise dat.gui pour laisser la posibilité de modifier des parties de l'oeuvre et stat.min pour avoir les fps et montrer que le programme est bien optimisé.<br>
+        J'utilise dat.gui pour laisser la posibilité de modifier des parties de l'œuvre et stat.min pour avoir les fps et montrer que le programme est bien optimisé.<br>
+        Il y a énormément d'option disponible dans le gui avec par exemple dans le dossier settings la possibilité de passer la sscène en plein écran.<br>
         L'œuvre est éclairé par une lumière directionnelle sombre venant de l'axe Z elle permet entre autres de créer le relief des bateaux.<br>
         La montagne est faite avec deux THREE.CylinderGeometry.
         Une la montagne et l'autre la neige, la neige est en material basic pour pas ne pas avoir la noirceur de la lumière et bien ressortir.<br>
@@ -77,16 +81,23 @@
         La skybox est faite à l'aide d'une image de ciel recoloriez par mes soins dans les couleurs de l'œuvre et découpé et redimensionné à l'aide de GIMP.<br>
         Quant aux animations le fichier reset remet simplement aux valeurs par défaut.
         L'option Wave règle simplement une variable qui sert de fréquence à la fonction sin pour les vagues.
-        Quant au Live mode celui-ci se charge simplement d'incrémenter un x dans notre sin ce qui va nous faire parcourir la courbe sin, la valeur speed est la valeur d'increment par tour du x.<br>
+        Quant au Live mode celui-ci se charge simplement d'incrémenter un x dans notre sin ce qui va nous faire parcourir la courbe sin, la valeur speed est la valeur d'incrément par tour du x.<br>
         Pour le mode aventure je place seulement la caméra sur le bateau à l'aide des mêmes méthodes utilisées que pour placer le bateau et j'adapte le target du CameraControls pour que la caméra suit l'angle du bateau.<br>
-        Je change aussi la fov pendant le mode aventure pour avoir une meilleure immersion.<br>
+        Je change aussi la fov pendant le mode aventure pour avoir une meilleure immersion. Et de plus j'ajoute un brouillard de type Exp2 pour plus de réalisme<br>
         <br>
         Pour appliquer la texture, je calcule à l'initialisation les valeurs des UV correspondant à ma texture de ce fait, il n'y a quasiment aucune perte de temps au runtime,
         et la texture épouse parfaitement la forme de la vague. Pour donner un aspect de vague je vais jouer sur l'offset de la texture je vais l'incrémenter en X de la valeur speed de la vague.<br>
         Comme cela la texture va aussi vite que les vagues en mode run ce qui ajoute du réalisme.<br>
-        Quant à l'offset en Y je vais varier entre deux valeurs très proches de 0 pour faire un effet de mouvement latéral propre à la mer, pour que le changement de direction du offset ne soit pas
-        trop brusque je multiplie par sa valeur elle-même de ce fait quand elle se rapproche de 0 elle se déplace lentement et quand elle s'écarte, elle s'accélère ce qui évite un mouvement régulier peu réaliste.<br>
-        Pour ne pas avoir de choc dans l'offset je répète l'image en miroir comme ça je suis sûr que la transition du repeat se passe sans accroc.<br>
+        Pour gérer les offset, j'utilise deux Tweening qui permettront de gérer l'offset en Z de la vague et de la partie blanche de la vague.<br>
+        <br>
+        Pour faire des particules d'eau, j'utilise des Sprites que je vais ajouter dans la scène quand le sommet d'une vague apparaît (tout début),
+        pour leur donner un aspect visuel, j'applique une texture transparente récupérer sur le tableau original. Je vais ensuite dans un intervalle de valeur aux alentours de la vague placer aléatoirement un nombre de Sprite<br>
+        À chaque itération je vais leur appliquer un décalage dans l'axe x pour suivre la vitesse de la vague ensuite pour donner un aspect de gravité sur la particule qui tombe de plus en plus vite.<br>
+        J'utilise l'allure de la courbe 1/x qui correspond au comportement de la gravité au niveau des particules pour modifier l'axe Y et avoir une particule qui descend légèrement au début jusqu'à tomber extrêmement vite dans le temps<br>
+        J'ajoute une constante k qui sera incrémenté de ce fait au début la particule monte légèrement ce qui lui donne un effet de propulsion par la vague<br>
+
+        <hr>
+        <p> <a href="https://www.linkedin.com/in/lucas-aries-85a215209/">linkedin</a> | ARIES Lucas | <a href="https://github.com/Kallu-A/">github</a></p>
 
     </p>
     <script src="wave-of-kanagawa.js"></script>

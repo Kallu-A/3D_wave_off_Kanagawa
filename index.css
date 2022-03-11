@@ -37,6 +37,7 @@ img {
 
 #stats {
     position: fixed;
+    z-index: 10;
     margin-left: 10px;
     margin-top: -14px;
 }
@@ -59,4 +60,14 @@ img {
 
 #z {
     color: #0000FF;
+}
+
+.display-full {
+    position: fixed;
+    align-self: flex-start;
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
