@@ -22,9 +22,10 @@
 
     <!-- Bibliotheques en local -->
     <script src="lib/dat.gui.min.js"></script>
-    <script src="lib/Coordinates.js"></script>
+    <script src="lib/CustomCoordinate.js"></script>
     <script src="lib/stats.min.js"></script>
     <script src="lib/tween.min.js"></script>
+    <script src="lib/EventsControls.js"></script>
 
     <!-- Page Web -->
     <div id="stats"></div>
@@ -32,6 +33,7 @@
         <h1>La Grande Vague de Kanagawa</h1>
     </a>
     <a href="https://fr.wikipedia.org/wiki/Hokusai">Katsushika Hokusai - 1831</a>
+    <a href="https://github.com/Kallu-A/3D_wave_off_Kanagawa" class="float-button" id="returnButton">github</a>
     <div id="container">
         <div>
             <h3>Modèle</h3>
@@ -95,9 +97,11 @@
         À chaque itération je vais leur appliquer un décalage dans l'axe x pour suivre la vitesse de la vague ensuite pour donner un aspect de gravité sur la particule qui tombe de plus en plus vite.<br>
         J'utilise l'allure de la courbe 1/x qui correspond au comportement de la gravité au niveau des particules pour modifier l'axe Y et avoir une particule qui descend légèrement au début jusqu'à tomber extrêmement vite dans le temps<br>
         J'ajoute une constante k qui sera incrémenté de ce fait au début la particule monte légèrement ce qui lui donne un effet de propulsion par la vague<br>
-
-        <hr>
-        <p> <a href="https://www.linkedin.com/in/lucas-aries-85a215209/">linkedin</a> | ARIES Lucas | <a href="https://github.com/Kallu-A/">github</a></p>
+        <br>
+        Pour pouvoir faire bouger les bateaux avec le drag j'utilise EventsControls je bloque la caméra quand on drag en la posant à ses dernières positions et j'adapte avec la fonction updateBoatWave().<br>
+        J'ai aussi amélioré les coordinates en fournissant ma propre version pour pouvoir afficher les axes et les retirer sans avoir besoin de redessiner la scène<br>
+    <hr>
+    <p> <a href="https://www.linkedin.com/in/lucas-aries-85a215209/">linkedin</a> | ARIES Lucas | <a href="https://github.com/Kallu-A/">github</a></p>
 
     </p>
     <script src="wave-of-kanagawa.js"></script>

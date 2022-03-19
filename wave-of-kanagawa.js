@@ -1,6 +1,6 @@
 "use strict";
 
-let camera, scene, renderer, gui, stats, webGL, isParticuleSet;
+let camera, scene, renderer, gui, stats, webGL, isParticuleSet, returnButton;
 let cameraControls, effectController;
 const clock = new THREE.Clock();
 const near = 0.2;
@@ -17,6 +17,7 @@ let pointFront = new Float32Array(3);
 let pointEnd = new Float32Array(3);
 let wave, wasAdventure;
 let topWave = [];
+let oldCamera = new Float32Array(3);
 wasAdventure = false;
 isParticuleSet = false;
 
@@ -66,6 +67,7 @@ let skyBoxLoader = new THREE.CubeTextureLoader()
 
 //gui var
 let axes = false;
+let isDrag= false;
 let resetCamera = {
     reset: function() {
         camera.setFocalLength(24.4);
@@ -108,6 +110,9 @@ let incrementLiveValue = 0.2;
 
 // PARTICULES utiles pour tout retirer d'un coup
 let groupParticle = new THREE.Object3D();
+
+// Drag EventsControls
+let eventsControls;
 
 // ici se font les dessins
 function draw() {
@@ -639,18 +644,18 @@ function create_boat(x, z, rx, ry, rz, i) {
             movables.push(object);
             updateBoatWave(object, i);
             scene.add(object);
+            eventsControls.attach(object);
         });
 }
 
 // Adapte le bateau à la forme de la vague
 // La fonction sera appelé au début et seulement après quand la rotation du bateau devra changer
 function updateBoatWave(movable, i) {
-    // adapte a la hauteur de la vague
+    // adapte à la hauteur de la vague
     // calcul en fonction de la position de la pente de la vague
-    let y = calculateY(movable.position.x - 6, true) * 1.1;
-    y = (chaslesY(y, movable.position.z) - 1) * 1.25;
+    let y = calculateY(movable.position.x - 5, true);
+    y = ((chaslesY(y, movable.position.z)) - 0.8) * 0.97;
     movable.position.y = y;
-    if (movable.position.z < size / 1.5) movable.position.y += 0.3;
 
     // calcul des points d'extrémité du bateau
     pointFront[0] = hypotenuse ;
@@ -678,7 +683,7 @@ function updateBoatWave(movable, i) {
 function resetWaveFunction() {
     scene.remove(wave);
     topWave.forEach( item => {
-       scene.remove(item);
+        scene.remove(item);
     });
     topWave.pop();
     topWave.pop();
@@ -693,21 +698,32 @@ function resetWaveFunction() {
 
 // permet le lien entre le gui
 function renderGUI() {
-    if (effectController.newAxes !== axes ) {
-        axes = effectController.newAxes;
-        movables = [];
-        fillScene();
+    // GUI
+    if (!axes && effectController.newAxes) {
+        axes = true;
+        drawAllAxes({ axisLength: 20, axisRadius: 0.3, axisTess: 7 });
+        document.getElementById('axes_legend').style.visibility = "visible";
+
+    } else if (axes && !effectController.newAxes){
+        document.getElementById('axes_legend').style.visibility = "hidden";
+        removeAllAxes();
+        axes = false;
     }
 
     if (effectController.fullScreen) {
         if (webGL.className === "") {
             renderer.setSize(window.innerWidth, window.innerHeight);
             webGL.className = "display-full";
+            returnButton.className = "hide"
+            document.body.style.overflow = "hidden";
+
         }
     } else {
         if (webGL.className === "display-full") {
             renderer.setSize(canvasWidth, canvasHeight);
             webGL.className = "";
+            returnButton.className ="float-button"
+            document.body.style.overflow = "visible";
         }
     }
 
@@ -728,20 +744,22 @@ function renderGUI() {
     // gère le mode aventure
     if ( effectController.adventureMode === true ) {
         wasAdventure = true;
+        for (let i = 0; i < 3; i++)
+            eventsControls.detach(movables[i]);
         // met la camera a la place du point de vue sur le bateau
         if (effectController.boatSelected === "0") {
-            camera.position.x = (size / 3) + 3;
-            camera.position.z = size / 1.2;
+            camera.position.x = movables[1].position.x + 3;
+            camera.position.z = movables[1].position.z;
         } else if (effectController.boatSelected === "1") {
-            camera.position.x = (size /3) + 3;
-            camera.position.z = size/3;
+            camera.position.x = movables[0].position.x + 3;
+            camera.position.z = movables[0].position.z;
         } else if (effectController.boatSelected === "2") {
-            camera.position.x = (size /1.2) + 3;
-            camera.position.z = size/2;
+            camera.position.x = movables[2].position.x + 3;
+            camera.position.z = movables[2].position.z;
         }
 
-        camera.position.y = calculateY(camera.position.x - 6, true) * 1.1;
-        camera.position.y = (chaslesY(camera.position.y, camera.position.z, false) - 1) * 1.25;
+        camera.position.y = calculateY(camera.position.x - 6, true);
+        camera.position.y = (chaslesY(camera.position.y, camera.position.z, false));
         if (camera.position.z < size / 1.5) camera.position.y += 0.3;
         camera.position.y += 2;
 
@@ -770,7 +788,8 @@ function renderGUI() {
         cameraControls.enable = true;
         wasAdventure = false;
         effectController.liveMode = false;
-        cameraControls.enable = true;
+        for (let i = 0; i < 3; i++)
+            eventsControls.attach(movables[i]);
     }
 }
 
@@ -817,15 +836,54 @@ function init() {
     // CAMERA
     camera = new THREE.PerspectiveCamera(45, canvasRatio, near, far);
     camera.position.set(decalx + size / 2, 30, -size + decalz);
+
     // CONTROLS
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
     cameraControls.target.set(decalx + size / 2,15 , decalz);
 
+    camera.setFocalLength(24.4);
     // STATS
     stats = new Stats();
     stats.setMode(0);
 
     fillScene();
+
+    // EventControls
+    eventsControls = new EventsControls( camera, renderer.domElement );
+
+    eventsControls.attachEvent( 'mouseOver', function () {
+        cameraControls.enable = false;
+        this.container.style.cursor = 'pointer';
+    });
+
+    eventsControls.attachEvent( 'mouseOut', function () {
+        cameraControls.enable = true;
+        this.container.style.cursor = 'auto';
+    });
+
+    eventsControls.attachEvent( 'dragAndDrop', function () {
+        isDrag = true;
+        camera.position.set(oldCamera[0], oldCamera[1], oldCamera[2]);
+        cameraControls.enable = false;
+        this.container.style.cursor = 'move';
+        this.focused.position.y = this.previous.y;
+
+        for (let i = 0; i < 3; i++) {
+            if (this.focused === movables[i]) {
+                movables[i].rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -oldRot[i]);
+                updateBoatWave(movables[i], i);
+            }
+        }
+    });
+
+    eventsControls.attachEvent( 'mouseUp', function () {
+        cameraControls.enable = true;
+        isDrag = false;
+        this.container.style.cursor = 'auto';
+    });
+
+    eventsControls.map = wave;
+
 }
 
 function fillScene() {
@@ -842,13 +900,6 @@ function fillScene() {
     // BACKGROUND (SKYBOX)
     scene.background = skyBoxLoader;
 
-    // GUI
-    if (axes) {
-        Coordinates.drawAllAxes({ axisLength: 20, axisRadius: 0.3, axisTess: 7 });
-        document.getElementById('axes_legend').style.visibility = "visible";
-    } else {
-        document.getElementById('axes_legend').style.visibility = "hidden";
-    }
     draw();
     tweenStart.chain(tweenEnd);
     tweenEnd.chain(tweenStart);
@@ -857,7 +908,7 @@ function fillScene() {
 
 }
 
-// permet de lancer l'animation 
+// permet de lancer l'animation
 function animate() {
     window.requestAnimationFrame(animate);
     render();
@@ -867,18 +918,24 @@ function animate() {
 // permet d'afficher la nouvelle scene a chaque nouvelle animation demandé
 function render() {
     let delta = clock.getDelta();
-    renderGUI();
     cameraControls.update(delta);
+    if (!isDrag) {
+        oldCamera[0] = camera.position.x;
+        oldCamera[1] = camera.position.y;
+        oldCamera[2] = camera.position.z;
+    }
 
     incrX += effectController.incrementLiveValue / 100;
     TWEEN.update();
 
+    renderGUI();
     renderer.render(scene, camera);
 }
 
 // fait le lien entre l'html et le js
 function addToDOM() {
     webGL = document.getElementById("webGL");
+    returnButton = document.getElementById("returnButton");
     webGL.appendChild(renderer.domElement);
     document.getElementById("stats").appendChild( stats.domElement );
 }
@@ -897,12 +954,14 @@ function calculateY(x, isLimit) {
         }
     }
 
-return y;
+    return y;
 }
 
 // applique la formule de Chasles
 function chaslesY(y, z, isLimit) {
-    y = z * (y /  (decalx + size) );
+    let decalY = y * 0.3
+    y = z * ( (y - decalY)  / (decalz + size) );
+    y += decalY;
     if (y < 0 ) {
         if (isLimit) {
             y = 0.2;

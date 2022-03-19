@@ -48,6 +48,7 @@ img {
 
 #axes_legend {
     font-size: 35px;
+    visibility: hidden;
 }
 
 #x {
@@ -70,4 +71,19 @@ img {
     bottom: 0;
     left: 0;
     right: 0;
+}
+
+.hide {
+    visibility: hidden;
+}
+
+.float-button {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    padding: 5px;
+    border-radius: 14px;
+    text-decoration: none;
+    background: rgb(201, 178, 149);
+    border: 2px solid #636363;
 }
